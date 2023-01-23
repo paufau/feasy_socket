@@ -33,14 +33,11 @@ class FeasySocketServer {
 
       socket.stream.listen((event) {
         print(event);
+        lastPing = DateTime.now().millisecondsSinceEpoch;
 
         if (!isConnected) {
           isConnected = true;
           onEvent(FeasyEventType.CONNECTED, null);
-        }
-
-        if (event == FeasyEventType.PONG) {
-          lastPing = DateTime.now().millisecondsSinceEpoch;
         }
       });
     });

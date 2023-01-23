@@ -23,6 +23,9 @@ class FeasySocketServer {
 
       Timer.periodic(Duration(milliseconds: pingIntervalMs), (timer) {
         int now = DateTime.now().millisecondsSinceEpoch;
+        print(lastPing);
+        print(now - lastPing);
+        print(pingIntervalMs + pingTTA);
         if (lastPing > 0 && now - lastPing > pingIntervalMs + pingTTA) {
           onEvent(FeasyEventType.DISCONNECTED, null);
           timer.cancel();

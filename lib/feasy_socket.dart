@@ -1,52 +1,22 @@
-import 'dart:async';
-import 'dart:io';
+// import 'dart:convert';
 
-import 'package:shelf_web_socket/shelf_web_socket.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:shelf/shelf_io.dart' as shelf_io;
+// import 'client/client_option.dart';
+// import 'client/feasy_client.dart';
+// import 'server/feasy_server.dart';
 
-class FeasyEventType {
-  static String CONNECTED = "CONNECTED";
-  static String DISCONNECTED = "DISCONNECTED";
-  static String PING = "PING";
-  static String PONG = "PONG";
-}
+// void main(List<String> args) async {
+//   await FeasyServer().init((connection) {
+//     connection.onDataTransfer((data) {
+//       print('Server data transfer $data');
+//     });
+//   });
 
-class FeasySocketServer {
-  init(void Function(String type, dynamic data) onEvent) {
-    var handler = webSocketHandler((WebSocketChannel socket) {
-      bool isConnected = false;
+//   await FeasyClient(options: ClientOptions(address: '192.168.1.34'))
+//       .init(((connection) {
+//     connection.send(jsonEncode({'my': 'field'}));
 
-      int pingIntervalMs = 5000;
-      int pingTTA = 15000;
-      int lastPing = 0;
-
-      Timer.periodic(Duration(milliseconds: pingIntervalMs), (timer) {
-        int now = DateTime.now().millisecondsSinceEpoch;
-        print(lastPing);
-        print(now - lastPing);
-        print(pingIntervalMs + pingTTA);
-        if (lastPing > 0 && now - lastPing > pingIntervalMs + pingTTA) {
-          onEvent(FeasyEventType.DISCONNECTED, null);
-          timer.cancel();
-        } else {
-          socket.sink.add(FeasyEventType.PING);
-        }
-      });
-
-      socket.stream.listen((event) {
-        print(event);
-        lastPing = DateTime.now().millisecondsSinceEpoch;
-
-        if (!isConnected) {
-          isConnected = true;
-          onEvent(FeasyEventType.CONNECTED, null);
-        }
-      });
-    });
-
-    shelf_io.serve(handler, InternetAddress.anyIPv4, 8082).then((server) {
-      print('Serving at ws://${server.address.host}:${server.port}');
-    });
-  }
-}
+//     connection.onDisconnect(() {
+//       print("List connection with server");
+//     });
+//   }));
+// }

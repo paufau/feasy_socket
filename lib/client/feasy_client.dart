@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:feasy_socket/client/client_option.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -19,11 +20,21 @@ class FeasyClient {
   Future init(void Function(FeasyConnection connection) onConnection) async {
     server = WebSocketChannel.connect(
         Uri.parse('${options.protocol}://${options.address}:${options.port}'));
-    final connection = FeasyConnection(id: Uuid().v4(), channel: server);
+
+    await GetStorage.init();
+
+    var connectionId = GetStorage().read<String>('_connection_id');
+
+    if (connectionId == null) {
+      connectionId = Uuid().v4();
+      GetStorage().write('_connection_id', connectionId);
+    }
+
+    final connection = FeasyConnection(id: connectionId, channel: server);
 
     onConnection(connection);
 
-    connection.sendSystemEvent(FeasyEventType.HELLO);
+    connection.sendSystemEvent(FeasyEventType.HELLO, data: connectionId);
 
     int lastResponseTime = 0;
 

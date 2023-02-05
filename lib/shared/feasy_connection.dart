@@ -53,7 +53,7 @@ class FeasyConnection {
         FeasyEvent(type: FeasyEventType.TRANSFER, data: data).toJson()));
   }
 
-  sendSystemEvent(String? type) {
-    channel.sink.add(jsonEncode(FeasyEvent(type: type, data: null).toJson()));
+  sendSystemEvent(String? type, {String? data}) {
+    channel.sink.add(jsonEncode(FeasyEvent(type: type, data: data).toJson()));
   }
 }

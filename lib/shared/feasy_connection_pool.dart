@@ -6,7 +6,9 @@ class FeasyConnectionPool {
   final List<FeasyConnection> _pool = [];
 
   FeasyConnectionPool broadcast(String? event) {
-    _pool.map((c) => c.send(event));
+    for (var connection in _pool) {
+      connection.send(event);
+    }
     return this;
   }
 

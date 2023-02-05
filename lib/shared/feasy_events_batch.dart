@@ -20,7 +20,10 @@ class FeasyEventsBatch {
   }
 
   release() {
-    queue.map((e) => e());
+    for (var callback in queue) {
+      callback();
+    }
+
     clean();
   }
 

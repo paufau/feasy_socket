@@ -52,17 +52,18 @@ class FeasyServer {
 
           if (savedConnection != null) {
             savedConnection.emitDisconnect();
-          } else {
-            connection = FeasyConnection(id: connectionId, channel: socket);
-
-            _savedConnections[connectionId] = connection!;
-            onConnection(connection!);
-
-            runHeartbeat(connection!);
-
-            connection!.sendSystemEvent(FeasyEventType.HELLO);
-            connection!.emitConnect();
+            _savedConnections.remove(connectionId);
           }
+
+          connection = FeasyConnection(id: connectionId, channel: socket);
+          _savedConnections[connectionId] = connection!;
+
+          onConnection(connection!);
+
+          runHeartbeat(connection!);
+
+          connection!.sendSystemEvent(FeasyEventType.HELLO);
+          connection!.emitConnect();
         }
 
         if (connection != null) {

@@ -17,22 +17,22 @@ class FeasyServer {
   Future<HttpServer> init(
       void Function(FeasyConnection connection) onConnection) async {
     var handler = webSocketHandler((WebSocketChannel socket) {
-      var connection = FeasyConnection(channel: socket, id: Uuid().v4());
-
       int pingIntervalMs = 5000;
       int pingResponseTime = 15000;
       int lastResponseTime = 0;
 
-      Timer.periodic(Duration(milliseconds: pingIntervalMs), (timer) {
-        int now = DateTime.now().millisecondsSinceEpoch;
-        if (lastResponseTime > 0 &&
-            now - lastResponseTime > pingIntervalMs + pingResponseTime) {
-          connection.emitDisconnect();
-          timer.cancel();
-        } else {
-          connection.sendSystemEvent(FeasyEventType.HEARTBEAT);
-        }
-      });
+      runHeartbeat(FeasyConnection connection) {
+        Timer.periodic(Duration(milliseconds: pingIntervalMs), (timer) {
+          int now = DateTime.now().millisecondsSinceEpoch;
+          if (lastResponseTime > 0 &&
+              now - lastResponseTime > pingIntervalMs + pingResponseTime) {
+            connection.emitDisconnect();
+            timer.cancel();
+          } else {
+            connection.sendSystemEvent(FeasyEventType.HEARTBEAT);
+          }
+        });
+      }
 
       socket.stream.listen((event) {
         lastResponseTime = DateTime.now().millisecondsSinceEpoch;
@@ -46,24 +46,27 @@ class FeasyServer {
             throw Exception('No connection id found');
           }
 
-          if (_savedConnections[connectionId] != null) {
-            connection = _savedConnections[connectionId]!;
-          } else {
-            connection.id = connectionId;
+          final savedConnection = _savedConnections[connectionId];
+
+          if (savedConnection == null) {
+            final connection =
+                FeasyConnection(id: connectionId, channel: socket);
             _savedConnections[connectionId] = connection;
+            onConnection(connection);
+
+            connection.sendSystemEvent(FeasyEventType.HELLO);
+            connection.emitConnect();
+
+            if (feasyEvent.type == FeasyEventType.TRANSFER) {
+              connection.emitDataTransfer(feasyEvent.data);
+            }
+          } else {
+            savedConnection.emitDisconnect();
+            savedConnection.channel = socket;
+            savedConnection.channel.changeStream((e) => socket.stream);
+            savedConnection.channel.changeSink((p0) => socket.sink);
           }
-
-          onConnection(connection);
-
-          connection.emitConnect();
-          connection.sendSystemEvent(FeasyEventType.HELLO);
         }
-
-        if (feasyEvent.type == FeasyEventType.TRANSFER) {
-          connection.emitDataTransfer(feasyEvent.data);
-        }
-      }, onDone: () {
-        connection.emitDisconnect();
       });
     });
 

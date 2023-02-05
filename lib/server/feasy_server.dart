@@ -68,8 +68,10 @@ class FeasyServer {
           }
         }
 
-        if (feasyEvent.type == FeasyEventType.TRANSFER) {
-          connection.emitDataTransfer(feasyEvent.data);
+        if (connection != null) {
+          if (feasyEvent.type == FeasyEventType.TRANSFER) {
+            connection.emitDataTransfer(feasyEvent.data);
+          }
         }
       });
     });

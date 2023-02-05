@@ -30,6 +30,8 @@ class FeasyClient {
       GetStorage().write('_connection_id', connectionId);
     }
 
+    print(connectionId);
+
     final connection = FeasyConnection(id: connectionId, channel: server);
 
     onConnection(connection);

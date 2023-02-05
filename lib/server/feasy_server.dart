@@ -42,8 +42,14 @@ class FeasyServer {
         if (feasyEvent.type == FeasyEventType.HELLO) {
           final connectionId = feasyEvent.data;
 
+          if (connectionId == null) {
+            throw Exception('No connection id found');
+          }
+
           if (_savedConnections[connectionId] != null) {
             connection = _savedConnections[connectionId]!;
+          } else {
+            _savedConnections[connectionId] = connection;
           }
 
           onConnection(connection);

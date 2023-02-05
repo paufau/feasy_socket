@@ -61,9 +61,8 @@ class FeasyServer {
             connection.emitConnect();
           } else {
             savedConnection.emitDisconnect();
-            savedConnection.channel = socket;
-            savedConnection.channel.changeStream((e) => socket.stream);
             savedConnection.channel.changeSink((p0) => socket.sink);
+            savedConnection.channel.changeStream((p0) => socket.stream);
             savedConnection.emitConnect();
           }
         }

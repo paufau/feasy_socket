@@ -5,18 +5,28 @@ class FeasyEventsBatch {
 
   FeasyConnectionPool pool;
 
-  List<void Function(FeasyConnectionPool pool)> queue = [];
+  List<void Function()> queue = [];
 
   rebind(FeasyConnectionPool pool) {
     this.pool = pool;
   }
 
   add(Function(FeasyConnectionPool pool) executor) {
-    queue.add(executor);
+    queue.add(() => executor(pool));
+  }
+
+  clean() {
+    queue = [];
   }
 
   release() {
-    queue.map((e) => e(pool));
-    queue = [];
+    queue.map((e) => e());
+    clean();
+  }
+
+  FeasyEventsBatch merge(FeasyEventsBatch batch) {
+    queue.addAll(batch.queue);
+    pool = batch.pool;
+    return this;
   }
 }

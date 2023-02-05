@@ -34,7 +34,7 @@ class FeasyServer {
         });
       }
 
-      var connection;
+      FeasyConnection? connection;
 
       socket.stream.listen((event) {
         lastResponseTime = DateTime.now().millisecondsSinceEpoch;
@@ -50,26 +50,24 @@ class FeasyServer {
 
           final savedConnection = _savedConnections[connectionId];
 
-          if (savedConnection == null) {
-            connection = FeasyConnection(id: connectionId, channel: socket);
-            _savedConnections[connectionId] = connection;
-            onConnection(connection);
-
-            runHeartbeat(connection);
-
-            connection.sendSystemEvent(FeasyEventType.HELLO);
-            connection.emitConnect();
-          } else {
+          if (savedConnection != null) {
             savedConnection.emitDisconnect();
-            savedConnection.channel.changeSink((p0) => socket.sink);
-            savedConnection.channel.changeStream((p0) => socket.stream);
-            savedConnection.emitConnect();
+          } else {
+            connection = FeasyConnection(id: connectionId, channel: socket);
+
+            _savedConnections[connectionId] = connection!;
+            onConnection(connection!);
+
+            runHeartbeat(connection!);
+
+            connection!.sendSystemEvent(FeasyEventType.HELLO);
+            connection!.emitConnect();
           }
         }
 
         if (connection != null) {
           if (feasyEvent.type == FeasyEventType.TRANSFER) {
-            connection.emitDataTransfer(feasyEvent.data);
+            connection!.emitDataTransfer(feasyEvent.data);
           }
         }
       });

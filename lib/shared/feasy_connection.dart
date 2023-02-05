@@ -29,28 +29,34 @@ class FeasyConnection {
   }
 
   emitConnect() {
-    isConnected = true;
-    if (_handleConnect != null) {
-      _handleConnect!();
+    if (!isConnected) {
+      isConnected = true;
+      if (_handleConnect != null) {
+        _handleConnect!();
+      }
     }
   }
 
   emitDisconnect() {
-    isConnected = false;
-    if (_handleDisonnect != null) {
-      _handleDisonnect!();
+    if (isConnected) {
+      isConnected = false;
+      if (_handleDisonnect != null) {
+        _handleDisonnect!();
+      }
     }
   }
 
   emitDataTransfer(String? data) {
-    if (_handleDataTransfer != null) {
+    if (_handleDataTransfer != null && isConnected) {
       _handleDataTransfer!(data);
     }
   }
 
   send(String? data) {
-    channel.sink.add(jsonEncode(
-        FeasyEvent(type: FeasyEventType.TRANSFER, data: data).toJson()));
+    if (isConnected) {
+      channel.sink.add(jsonEncode(
+          FeasyEvent(type: FeasyEventType.TRANSFER, data: data).toJson()));
+    }
   }
 
   sendSystemEvent(String? type, {String? data}) {

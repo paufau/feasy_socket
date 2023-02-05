@@ -49,6 +49,7 @@ class FeasyServer {
           if (_savedConnections[connectionId] != null) {
             connection = _savedConnections[connectionId]!;
           } else {
+            connection.id = connectionId;
             _savedConnections[connectionId] = connection;
           }
 
@@ -61,6 +62,8 @@ class FeasyServer {
         if (feasyEvent.type == FeasyEventType.TRANSFER) {
           connection.emitDataTransfer(feasyEvent.data);
         }
+      }, onDone: () {
+        connection.emitDisconnect();
       });
     });
 

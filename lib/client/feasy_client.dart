@@ -19,8 +19,11 @@ class FeasyClient {
 
   makeConnection() {
     try {
+      print('reconnect');
       server = WebSocketChannel.connect(Uri.parse(
           '${options.protocol}://${options.address}:${options.port}'));
+
+      print(server.closeReason);
 
       if (onConnectionListener != null) {
         passListener(onConnectionListener!);

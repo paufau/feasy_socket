@@ -69,6 +69,9 @@ class FeasyClient {
     });
 
     server.stream.listen((event) {
+      print('LISTEN');
+      print(event);
+
       lastResponseTime = DateTime.now().millisecondsSinceEpoch;
       final feasyEvent = FeasyEvent.fromJson(jsonDecode(event));
 

@@ -17,10 +17,24 @@ class FeasyClient {
 
   ClientOptions options;
 
-  Future init(void Function(FeasyConnection connection) onConnection) async {
-    server = WebSocketChannel.connect(
-        Uri.parse('${options.protocol}://${options.address}:${options.port}'));
+  makeConnection() {
+    try {
+      server = WebSocketChannel.connect(Uri.parse(
+          '${options.protocol}://${options.address}:${options.port}'));
 
+      if (onConnectionListener != null) {
+        passListener(onConnectionListener!);
+      }
+    } catch (e) {
+      Timer(Duration(milliseconds: options.reconnectIntervalMs), () {
+        makeConnection();
+      });
+    }
+  }
+
+  void Function(FeasyConnection connection)? onConnectionListener;
+
+  passListener(void Function(FeasyConnection connection) onConnection) async {
     await GetStorage.init();
 
     var connectionId = GetStorage().read<String>('_connection_id');
@@ -47,6 +61,7 @@ class FeasyClient {
               options.hearbeatIntervalMs + options.heartbeatResponseTimeMs) {
         connection.emitDisconnect();
         timer.cancel();
+        makeConnection();
       }
     });
 
@@ -66,5 +81,10 @@ class FeasyClient {
         connection.emitDataTransfer(feasyEvent.data);
       }
     });
+  }
+
+  Future init(void Function(FeasyConnection connection) onConnection) async {
+    onConnectionListener = onConnection;
+    makeConnection();
   }
 }

@@ -10,6 +10,8 @@ class FeasyEventListeners<T extends Function> {
   }
 
   callListeners({dynamic data}) {
-    listeners.map((l) => l(data));
+    for (var listener in listeners) {
+      listener(data);
+    }
   }
 }

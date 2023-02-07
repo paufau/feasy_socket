@@ -17,13 +17,13 @@ class FeasyClient {
 
   ClientOptions options;
 
-  makeConnection() {
+  makeConnection() async {
     try {
       print('reconnect');
       server = WebSocketChannel.connect(Uri.parse(
           '${options.protocol}://${options.address}:${options.port}'));
 
-      print(server.closeReason);
+      await server.ready;
 
       if (onConnectionListener != null) {
         passListener(onConnectionListener!);
@@ -86,7 +86,7 @@ class FeasyClient {
       if (feasyEvent.type == FeasyEventType.TRANSFER) {
         connection.emitDataTransfer(feasyEvent.data);
       }
-    });
+    }, onDone: () => makeConnection(), onError: (e) => makeConnection());
   }
 
   Future init(void Function(FeasyConnection connection) onConnection) async {

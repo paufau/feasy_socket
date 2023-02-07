@@ -86,7 +86,13 @@ class FeasyClient {
       if (feasyEvent.type == FeasyEventType.TRANSFER) {
         connection.emitDataTransfer(feasyEvent.data);
       }
-    }, onDone: () => makeConnection(), onError: (e) => makeConnection());
+    }, onDone: () {
+      connection.emitDisconnect();
+      makeConnection();
+    }, onError: (e) {
+      connection.emitDisconnect();
+      makeConnection();
+    });
   }
 
   Future init(void Function(FeasyConnection connection) onConnection) async {

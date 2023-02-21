@@ -2,18 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_web_socket/shelf_web_socket.dart';
-import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../shared/feasy_connection.dart';
 import '../shared/feasy_event.dart';
 
-import 'package:shelf/shelf_io.dart' as shelf_io;
-
 class FeasyServer {
-  Map<String, FeasyConnection> _savedConnections = {};
-
   Future<HttpServer> init(
       void Function(FeasyConnection connection) onConnection) async {
     var handler = webSocketHandler((WebSocketChannel socket) {
@@ -48,15 +44,7 @@ class FeasyServer {
             throw Exception('No connection id found');
           }
 
-          final savedConnection = _savedConnections[connectionId];
-
-          if (savedConnection != null) {
-            savedConnection.emitDisconnect();
-            _savedConnections.remove(connectionId);
-          }
-
           connection = FeasyConnection(id: connectionId, channel: socket);
-          _savedConnections[connectionId] = connection!;
 
           onConnection(connection!);
 

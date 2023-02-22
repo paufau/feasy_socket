@@ -13,28 +13,9 @@ class FeasyServer {
   Future<HttpServer> init(
       void Function(FeasyConnection connection) onConnection) async {
     var handler = webSocketHandler((WebSocketChannel socket) {
-      int pingIntervalMs = 5000;
-      int pingResponseTime = 15000;
-      int lastResponseTime = 0;
-
-      runHeartbeat(FeasyConnection connection) {
-        Timer.periodic(Duration(milliseconds: pingIntervalMs), (timer) {
-          int now = DateTime.now().millisecondsSinceEpoch;
-          if (lastResponseTime > 0 &&
-              now - lastResponseTime > pingIntervalMs + pingResponseTime) {
-            connection.emitDisconnect();
-            timer.cancel();
-          } else {
-            connection.sendSystemEvent(FeasyEventType.HEARTBEAT);
-          }
-        });
-      }
-
       FeasyConnection? connection;
 
       socket.stream.listen((event) {
-        lastResponseTime = DateTime.now().millisecondsSinceEpoch;
-
         final feasyEvent = FeasyEvent.fromJson(jsonDecode(event));
 
         if (feasyEvent.type == FeasyEventType.HELLO) {
@@ -48,8 +29,6 @@ class FeasyServer {
 
           onConnection(connection!);
 
-          runHeartbeat(connection!);
-
           connection!.sendSystemEvent(FeasyEventType.HELLO);
           connection!.emitConnect();
         }
@@ -59,8 +38,16 @@ class FeasyServer {
             connection!.emitDataTransfer(feasyEvent.data);
           }
         }
+      }, onDone: () {
+        if (connection != null) {
+          connection!.emitDisconnect();
+        }
+      }, onError: (e) {
+        if (connection != null) {
+          connection!.emitDisconnect();
+        }
       });
-    });
+    }, pingInterval: const Duration(seconds: 5));
 
     final server = await shelf_io.serve(handler, InternetAddress.anyIPv4, 8082);
     print('Serving at ws://${server.address.host}:${server.port}');

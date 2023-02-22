@@ -54,29 +54,11 @@ class FeasyClient {
 
     connection.sendSystemEvent(FeasyEventType.HELLO, data: connectionId);
 
-    int lastResponseTime = 0;
-
-    Timer.periodic(Duration(milliseconds: options.hearbeatIntervalMs), (timer) {
-      int now = DateTime.now().millisecondsSinceEpoch;
-      if (lastResponseTime > 0 &&
-          now - lastResponseTime >
-              options.hearbeatIntervalMs + options.heartbeatResponseTimeMs) {
-        connection.emitDisconnect();
-        timer.cancel();
-        makeConnection();
-      }
-    });
-
     server.stream.listen((event) {
       print('LISTEN');
       print(event);
 
-      lastResponseTime = DateTime.now().millisecondsSinceEpoch;
       final feasyEvent = FeasyEvent.fromJson(jsonDecode(event));
-
-      if (feasyEvent.type == FeasyEventType.HEARTBEAT) {
-        connection.sendSystemEvent(FeasyEventType.HEARTBEAT);
-      }
 
       if (feasyEvent.type == FeasyEventType.HELLO) {
         connection.emitConnect();
